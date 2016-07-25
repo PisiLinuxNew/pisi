@@ -29,6 +29,7 @@ import pisi.cli.configurepending
 import pisi.cli.deletecache
 import pisi.cli.delta
 import pisi.cli.emerge
+import pisi.cli.emergeup
 import pisi.cli.fetch
 import pisi.cli.graph
 import pisi.cli.index

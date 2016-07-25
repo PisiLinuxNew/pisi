@@ -20,6 +20,7 @@ _ = __trans.ugettext
 import pisi.cli.command as command
 import pisi.context as ctx
 import pisi.api
+import pisi
 
 class Fetch(command.Command):
     __doc__ = _("""Fetch a package
@@ -45,12 +46,24 @@ Downloads the given pisi packages to working directory
     def add_options(self, group):
         group.add_option("-o", "--output-dir", action="store", default=os.path.curdir,
                                help=_("Output directory for the fetched packages"))
+        group.add_option("--runtime-deps", action="store_true", default=None,
+                               help=_("Bağımlılıkları ile indirme açıklaması."))
 
     def run(self):
+        packages = pisi.db.packagedb.PackageDB()
         self.init(database = False, write = False)
 
         if not self.args:
             self.help()
             return
+        
+        full_packages = []
+        
+        for pisi_package in self.args:
+            package = packages.get_package(pisi_package)
+            full_packages.append(pisi_package)
+            if ctx.config.options.runtime_deps:
+                for dep in package.runtimeDependencies():
+                    full_packages.append(dep.name())
 
-        pisi.api.fetch(self.args, ctx.config.options.output_dir)
+        pisi.api.fetch(full_packages, ctx.config.options.output_dir)
