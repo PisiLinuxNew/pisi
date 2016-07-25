@@ -17,7 +17,7 @@ import glob
 import sys
 import inspect
 import tempfile
-from distutils.core import setup
+from setuptools import setup
 from distutils.command.build import build
 from distutils.command.install import install
 
@@ -152,7 +152,10 @@ class Install(install):
                     pisiconf.write("%s = %s\n" % (member[0], member[1]))
             pisiconf.write('\n')
 
-
+datas = [
+    ("/etc/pisi/" ,["applied-patches/mirrors.conf", "applied-patches/sandbox.conf"]),
+    ("/usr/share/mime/packages/", ["pisi.xml"])
+]
 
 setup(name="pisi",
     version= pisi.__version__,
@@ -167,7 +170,8 @@ setup(name="pisi",
     scripts = ['pisi-cli', 'scripts/lspisi', 'scripts/unpisi', 'scripts/check-newconfigs.py', 'scripts/revdep-rebuild'],
     cmdclass = {'build' : Build,
                 'build_po' : BuildPo,
-                'install' : Install}
+                'install' : Install},
+    data_files =datas
     )
 
 # the below stuff is really nice but we already have a version
