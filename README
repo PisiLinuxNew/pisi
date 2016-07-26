@@ -16,3 +16,30 @@ Some of its distinctive features:
  - Comprehensive CLI and a user-friendly qt GUI (distributed separately)
  - Extremely simple package construction
 
+Build Dependencies:
+
+* comar
+* plyvel
+* python 2.7
+* gettext
+* libunwind-devel
+* intltool
+* leveldb-devel 1.8
+
+
+Runtime Dependencies:
+
+* tar
+* file
+* comar
+* plyvel
+* python
+* gettext
+* leveldb 1.8
+* piksemel
+* comar-api
+* urlgrabber
+* python-psutil
+* libunwind
+* python-pyliblzma
+* mudur 4.4.0
