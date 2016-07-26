@@ -154,7 +154,8 @@ class Install(install):
 
 datas = [
     ("/etc/pisi/" ,["applied-patches/mirrors.conf", "applied-patches/sandbox.conf"]),
-    ("/usr/share/mime/packages/", ["pisi.xml"])
+    ("/usr/share/mime/packages/", ["pisi.xml"]),
+    ("/usr/lib/tmpfiles.d/", ["applied-patches/pisi.conf"])
 ]
 
 setup(name="pisi",
