@@ -17,7 +17,7 @@ import glob
 import sys
 import inspect
 import tempfile
-from setuptools import setup
+from distutils.core import setup
 from distutils.command.build import build
 from distutils.command.install import install
 
@@ -152,27 +152,23 @@ class Install(install):
                     pisiconf.write("%s = %s\n" % (member[0], member[1]))
             pisiconf.write('\n')
 
-datas = [
-    ("/etc/pisi/" ,["applied-patches/mirrors.conf", "applied-patches/sandbox.conf"]),
-    ("/usr/share/mime/packages/", ["pisi.xml"]),
-    ("/usr/lib/tmpfiles.d/", ["applied-patches/pisi.conf"])
-]
 
-setup(name="pisi",
-    version= pisi.__version__,
+setup(
+    name="pisi",
+    version=pisi.__version__,
     description="PiSi (Packages Installed Successfully as Intended)",
     long_description="PiSi is the package management system of Pisi Linux.",
     license="GNU GPL2",
     author="Pisi Linux Developers",
     author_email="admins@pisilinux.org",
     url="https://github.com/pisilinux/project/tree/master/pisi",
-    package_dir = {'': ''},
-    packages = ['pisi', 'pisi.cli', 'pisi.operations', 'pisi.actionsapi', 'pisi.pxml', 'pisi.scenarioapi', 'pisi.db'],
-    scripts = ['pisi-cli', 'scripts/lspisi', 'scripts/unpisi', 'scripts/check-newconfigs.py', 'scripts/revdep-rebuild'],
-    cmdclass = {'build' : Build,
-                'build_po' : BuildPo,
-                'install' : Install},
-    data_files =datas
+    package_dir={'': ''},
+    packages=['pisi', 'pisi.cli', 'pisi.operations', 'pisi.actionsapi', 'pisi.pxml', 'pisi.scenarioapi', 'pisi.db'],
+    scripts=['pisi-cli', 'scripts/lspisi', 'scripts/unpisi', 'scripts/check-newconfigs.py', 'scripts/revdep-rebuild'],
+    cmdclass={
+        'build': Build,
+        'build_po': BuildPo,
+        'install': Install},
     )
 
 # the below stuff is really nice but we already have a version
