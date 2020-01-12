@@ -253,8 +253,12 @@ def installLibcHeaders(excludes=None):
     # Create directories
     shelltools.makedirs(headers_tmp)
     shelltools.makedirs(headers_dir)
-    
-    # install the headers
+
+    # Clean up the source directory
+    autotools.make("mrproper")
+
+    # make defconfig and install the headers
+    autotools.make("%s defconfig" % make_cmd)
     autotools.rawInstall(make_cmd, "headers_install")
 
     oldwd = os.getcwd()
