@@ -629,7 +629,7 @@ def strip_file(filepath, fileinfo, outpath):
         # run_chrpath(filepath)
         return True
 
-    elif re.search("SB\s+shared object", fileinfo):
+    elif re.search("SB\s+shared object", fileinfo) or re.search("SB\s+pie executable", fileinfo):
         if ctx.config.values.build.generatedebug:
             ensure_dirs(os.path.dirname(outpath))
             save_elf_debug(filepath, outpath)
