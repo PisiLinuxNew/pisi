@@ -14,7 +14,7 @@ import optparse
 
 import gettext
 __trans = gettext.translation('pisi', fallback=True)
-_ = __trans.ugettext
+_ = __trans.gettext
 
 import pisi
 import pisi.api
@@ -22,7 +22,7 @@ import pisi.cli.command as command
 import pisi.context as ctx
 import pisi.db
 
-class Graph(command.Command):
+class Graph(command.Command, metaclass=command.autocommand):
     __doc__ = _("""Graph package relations
 
 Usage: graph [<package1> <package2> ...]
@@ -32,8 +32,6 @@ conflicts relations starting from given packages. By default
 shows the package relations among repository packages, and writes
 the package in graphviz format to 'pgraph.dot'.
 """)
-
-    __metaclass__ = command.autocommand
 
     def __init__(self, args=None):
         super(Graph, self).__init__(args)
@@ -92,4 +90,4 @@ the package in graphviz format to 'pgraph.dot'.
 
         g = pisi.api.package_graph(a, packagedb,
                                    ignore_installed = ctx.get_option('ignore_installed'), reverse = ctx.get_option('reverse'))
-        g.write_graphviz(file(ctx.get_option('output'), 'w'))
+        g.write_graphviz(open(ctx.get_option('output'), 'w'))

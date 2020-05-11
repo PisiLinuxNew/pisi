@@ -13,7 +13,7 @@
 
 import gettext
 __trans = gettext.translation('pisi', fallback=True)
-_ = __trans.ugettext
+_ = __trans.gettext
 
 import os
 import shutil
@@ -54,7 +54,7 @@ class AtomicOperation(object):
         pass
 
 # possible paths of install operation
-(INSTALL, REINSTALL, UPGRADE, DOWNGRADE, REMOVE) = range(5)
+(INSTALL, REINSTALL, UPGRADE, DOWNGRADE, REMOVE) = list(range(5))
 opttostr = {INSTALL:"install", REMOVE:"remove", REINSTALL:"reinstall", UPGRADE:"upgrade", DOWNGRADE:"downgrade"}
 
 class Install(AtomicOperation):
@@ -207,12 +207,13 @@ class Install(AtomicOperation):
             if not self.pkginfo.conflicts:
                 return True
 
-            return not pkg in map(lambda x:x.package, self.pkginfo.conflicts)
+            return not pkg in [x.package for x in self.pkginfo.conflicts]
         
         # check file conflicts
         file_conflicts = []
         for f in self.files.list:
             pkg, existing_file = ctx.filesdb.get_file(f.path)
+            
             if pkg:
                 dst = pisi.util.join_path(ctx.config.dest_dir(), f.path)
                 if pkg != self.pkginfo.name and not os.path.isdir(dst) and really_conflicts(pkg):
@@ -455,8 +456,8 @@ class Install(AtomicOperation):
 
         if self.reinstall():
             # get 'config' typed file objects
-            new = filter(lambda x: x.type == 'config', self.files.list)
-            old = filter(lambda x: x.type == 'config', self.old_files.list)
+            new = [x for x in self.files.list if x.type == 'config']
+            old = [x for x in self.old_files.list if x.type == 'config']
 
             # get config path lists
             newconfig = set(str(x.path) for x in new)
@@ -464,7 +465,7 @@ class Install(AtomicOperation):
 
             config_overlaps = newconfig & oldconfig
             if config_overlaps:
-                files = filter(lambda x: x.path in config_overlaps, old)
+                files = [x for x in old if x.path in config_overlaps]
                 for f in files:
                     check_config_changed(f)
         else:
@@ -568,9 +569,9 @@ class Remove(AtomicOperation):
         self.store_old_paths = store_old_paths
         try:
             self.files = self.installdb.get_files(self.package_name)
-        except pisi.Error, e:
+        except pisi.Error as e:
             # for some reason file was deleted, we still allow removes!
-            ctx.ui.error(unicode(e))
+            ctx.ui.error(str(e))
             ctx.ui.warning(_('File list could not be read for package %s, continuing removal.') % package_name)
             self.files = pisi.files.Files()
 

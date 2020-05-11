@@ -77,7 +77,7 @@ class BuildPo(build):
 
         # Update PO files
         for item in glob.glob1("po", "*.po"):
-            print "Updating .. ", item
+            print(("Updating .. ", item))
             os.system("msgmerge --update --no-wrap --sort-by-file po/%s po/%s.pot" % (item, PROJECT))
 
         # Cleanup
@@ -103,11 +103,11 @@ class Install(install):
             if not name.endswith('.po'):
                 continue
             lang = name[:-3]
-            print "Installing '%s' translations..." % lang
-            os.popen("msgfmt po/%s.po -o po/%s.mo" % (lang, lang))
+            print(f"Installing '{lang}' translations...")
+            os.system(f"msgfmt po/{lang}.po -o po/{lang}.mo")
             if not self.root:
                 self.root = "/"
-            destpath = os.path.join(self.root, "usr/share/locale/%s/LC_MESSAGES" % lang)
+            destpath = os.path.join(self.root, f"usr/share/locale/{lang}/LC_MESSAGES")
             if not os.path.exists(destpath):
                 os.makedirs(destpath)
             shutil.copy("po/%s.mo" % lang, os.path.join(destpath, "pisi.mo"))
@@ -118,7 +118,7 @@ class Install(install):
             os.makedirs(destpath)
         os.chdir('doc')
         for pdf in glob.glob('*.pdf'):
-            print 'Installing', pdf
+            print('Installing', pdf)
             shutil.copy(pdf, os.path.join(destpath, pdf))
         os.chdir('..')
 
@@ -154,7 +154,7 @@ class Install(install):
 
 datas = [
     ("/etc/pisi/" ,["applied-patches/mirrors.conf", "applied-patches/sandbox.conf"]),
-    ("/usr/share/mime/packages/", ["pisi.xml"]),
+    ("/usr/share/mime/packages/", ["build/pisi.xml"]),
     ("/usr/lib/tmpfiles.d/", ["applied-patches/pisi.conf"])
 ]
 
@@ -166,7 +166,7 @@ setup(name="pisi",
     author="Pisi Linux Developers",
     author_email="admins@pisilinux.org",
     url="https://github.com/pisilinux/project/tree/master/pisi",
-    package_dir = {'': ''},
+    #package_dir = {'': ''},
     packages = ['pisi', 'pisi.cli', 'pisi.operations', 'pisi.actionsapi', 'pisi.pxml', 'pisi.scenarioapi', 'pisi.db'],
     scripts = ['pisi-cli', 'scripts/lspisi', 'scripts/unpisi', 'scripts/check-newconfigs.py', 'scripts/revdep-rebuild'],
     cmdclass = {'build' : Build,

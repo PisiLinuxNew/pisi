@@ -12,7 +12,7 @@
 import os
 import gettext
 __trans = gettext.translation("pisi", fallback=True)
-_ = __trans.ugettext
+_ = __trans.gettext
 
 import pisi
 import pisi.context as ctx
@@ -89,7 +89,7 @@ def fetch_remote_file(package, errors):
     if not os.path.exists(filepath):
         try:
             pisi.fetcher.fetch_url(uri, dest, ctx.ui.Progress)
-        except pisi.fetcher.FetchError, e:
+        except pisi.fetcher.FetchError as e:
             errors.append(package)
             ctx.ui.info(pisi.util.colorize(_("%s could not be found") % (package), "red"))
             return False
@@ -118,7 +118,6 @@ def get_takeback_actions(operation):
     for operation in historydb.get_till_operation(operation):
         if operation.type == "snapshot":
             pass
-
         for pkg in operation.packages:
             if pkg.operation in ["upgrade", "downgrade", "remove"]:
                 actions[pkg.name] = ("install", pkg.before, operation.no)
@@ -130,6 +129,7 @@ def get_takeback_actions(operation):
 def plan_takeback(operation):
     historydb = pisi.db.historydb.HistoryDB()
     op = historydb.get_operation(operation)
+
     if op.type == "snapshot":
         actions = get_snapshot_actions(op)
     else:
@@ -159,7 +159,7 @@ def takeback(operation):
             paths.append(os.path.join(ctx.config.cached_packages_dir(), pkg))
 
     if errors:
-        ctx.ui.info(_("\nFollowing packages could not be found in repositories and are not cached:\n") + 
+        ctx.ui.info(_("\nFollowing packages could not be found in repositories and are not cached:\n") +
                     pisi.util.strlist(errors))
         if not ctx.ui.confirm(_('Do you want to continue?')):
             return

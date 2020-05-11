@@ -28,3 +28,5 @@
 * Performance and memory usage optimizations
 
 * Version validator
+
+* plyvel to python3.8

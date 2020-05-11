@@ -11,10 +11,11 @@
 #
 
 import optparse
+import os
 
 import gettext
 __trans = gettext.translation('pisi', fallback=True)
-_ = __trans.ugettext
+_ = __trans.gettext
 
 import pisi.api
 import pisi.cli.command as command
@@ -27,6 +28,7 @@ usage = _("""Verify installation
 
 Usage: check [<package1> <package2> ... <packagen>]
        check -c <component>
+       check -w <path>
 
 <packagei>: package name
 
@@ -38,10 +40,11 @@ If no packages are given, checks all installed packages.
 """)
 
 
-class Check(command.Command):
+
+
+class Check(command.Command, metaclass=command.autocommand):
 
     __doc__ = usage
-    __metaclass__ = command.autocommand
 
     def __init__(self, args):
         super(Check, self).__init__(args)
@@ -64,6 +67,12 @@ class Check(command.Command):
                          default=False,
                          help=_("Checks only changed config files of "
                                 "the packages"))
+
+        group.add_option("-w", "--write",
+                         action="store",
+                         default=None,
+                         help=_("Broken and Unknown packages write to given file"))
+                         # write Broken and Unknown packages to given file
 
         self.parser.add_option_group(group)
 
@@ -90,24 +99,43 @@ class Check(command.Command):
         # Line prefix
         prefix = _('Checking integrity of %s')
 
+        write_path = ctx.get_option("write")
+
+        # TODO: bu fonksiyonu iyileştir
+        def write_failed_check(path, text):
+            if path is None: return
+            if not os.path.exists(path):
+                try:
+                    with open(path,"w") as f:
+                        pass
+                except:
+                    raise _(f"file dont writable: {path}")
+                    
+            with open(path, "a") as file:
+                file.write(text + "\n")
+            return True
+
         # Determine maximum length of messages for proper formatting
         maxpkglen = max([len(_p) for _p in pkgs])
 
         for pkg in pkgs:
             if self.installdb.has_package(pkg):
                 check_results = pisi.api.check(pkg, check_config)
-                ctx.ui.info("%s    %s" % ((prefix % pkg),
-                                          ' ' * (maxpkglen - len(pkg))),
+                message = "%s    %s" % ((prefix % pkg),
+                                          ' ' * (maxpkglen - len(pkg)))
+                ctx.ui.info(message,
                             noln=True)
 
                 if check_results['missing'] or check_results['corrupted'] \
                         or check_results['config']:
                     ctx.ui.info(util.colorize(_("Broken"), 'brightred'))
+                    write_failed_check(write_path, message + _("Broken"))
                 elif check_results['denied']:
                     # We can't deduce a result when some files
                     # can't be accessed
                     necessary_permissions = False
                     ctx.ui.info(util.colorize(_("Unknown"), 'yellow'))
+                    write_failed_check(write_path, message + _("Unknown"))
                 else:
                     ctx.ui.info(util.colorize(_("OK"), 'green'))
                     continue
@@ -116,14 +144,17 @@ class Check(command.Command):
                 for fpath in check_results['missing']:
                     ctx.ui.info(util.colorize(
                         _("Missing file: /%s") % fpath, 'brightred'))
+                    write_failed_check(write_path, _("Missing file: /%s") % fpath)
 
                 for fpath in check_results['denied']:
                     ctx.ui.info(util.colorize(
                         _("Access denied: /%s") % fpath, 'yellow'))
+                    write_failed_check(write_path, _("Access denied: /%s") % fpath)
 
                 for fpath in check_results['corrupted']:
                     ctx.ui.info(util.colorize(
                         _("Corrupted file: /%s") % fpath, 'brightyellow'))
+                    write_failed_check(write_path, _("Corrupted file: /%s") % fpath)
 
                 for fpath in check_results['config']:
                     ctx.ui.info(util.colorize(
