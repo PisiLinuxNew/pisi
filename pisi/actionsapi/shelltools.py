@@ -19,7 +19,7 @@ import grp
 
 import gettext
 __trans = gettext.translation('pisi', fallback=True)
-_ = __trans.ugettext
+_ = __trans.gettext
 
 # Pisi Modules
 import pisi.context as ctx
@@ -56,7 +56,7 @@ def echo(destionationFile, content):
     except IOError:
         error(_('ActionsAPI [echo]: Can\'t append to file %s.') % (destionationFile))
 
-def chmod(filePath, mode = 0755):
+def chmod(filePath, mode = 0o755):
     '''change the mode of filePath to the mode'''
     filePathGlob = glob.glob(filePath)
     if len(filePathGlob) == 0:
@@ -177,7 +177,7 @@ def copytree(source, destination, sym = True):
                 return
         try:
             shutil.copytree(source, destination, sym)
-        except OSError, e:
+        except OSError as e:
             error(_('ActionsAPI [copytree] %s to %s: %s') % (source, destination, e))
     else:
         error(_('ActionsAPI [copytree]: Directory %s doesn\'t exists.') % (source))
@@ -247,7 +247,8 @@ def dirName(filePath):
     return os.path.dirname(filePath)
 
 def system(command):
-    command = string.join(string.split(command))
+    # command = string.join(string.split(command))
+    command = " ".join(str.split(command))
     retValue = run_logged(command)
 
     #if return value is different than 0, it means error, raise exception

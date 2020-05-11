@@ -17,7 +17,7 @@ import hashlib
 
 import gettext
 __trans = gettext.translation('pisi', fallback=True)
-_ = __trans.ugettext
+_ = __trans.gettext
 
 import pisi
 import pisi.context as ctx
@@ -44,7 +44,10 @@ class FilesLDB ():
         ctx.ui.info(pisi.util.colorize(_('done.'), 'green'))
 
     def get_file(self, path):
-        return self.filesdb.get(hashlib.md5(path).digest()), path
+        try:
+            return self.filesdb.get(hashlib.md5(path.encode("utf-8")).digest()).decode("utf-8"), path
+        except:
+            return self.filesdb.get(hashlib.md5(path.encode("utf-8")).digest()), path
 
     def search_file(self, term):
         pkg, path = self.get_file(term)
@@ -62,11 +65,11 @@ class FilesLDB ():
 
     def add_files(self, pkg, files):
         for f in files.list:
-            self.filesdb.put(hashlib.md5(f.path).digest(), pkg)
+            self.filesdb.put(hashlib.md5(f.path.encode("utf-8")).digest(), pkg.encode("utf-8"))
 
     def remove_files(self, files):
         for f in files:
-            self.filesdb.delete(hashlib.md5(f.path).digest())
+            self.filesdb.delete(hashlib.md5(f.path.encode("utf-8")).digest())
 
     def destroy(self):
         ctx.ui.info(pisi.util.colorize(_('Cleaning files database folder... '), 'green'), noln=True)

@@ -14,14 +14,14 @@ import optparse
 
 import gettext
 __trans = gettext.translation('pisi', fallback=True)
-_ = __trans.ugettext
+_ = __trans.gettext
 
 import pisi.cli.command as command
 import pisi.cli.build as build
 import pisi.context as ctx
 import pisi.api
 
-class EmergeUp(build.Build):
+class EmergeUp(build.Build, metaclass=command.autocommand):
     __doc__ = _("""Build and install PiSi source packages from repository
 
 Usage: emergeup ...
@@ -31,7 +31,6 @@ downloaded from a repository containing sources.
 
 You can also give the name of a component.
 """)
-    __metaclass__ = command.autocommand
 
     def __init__(self, args):
         super(EmergeUp, self).__init__(args)
@@ -76,7 +75,7 @@ You can also give the name of a component.
             ctx.ui.info(_('Outputting binary packages in the package cache.'))
             ctx.config.options.output_dir = ctx.config.cached_packages_dir()
 
-	repos = pisi.api.list_repos()
+        repos = pisi.api.list_repos()
         pisi.api.update_repos(repos, ctx.get_option('force'))
-	
+        
         pisi.api.emerge(emerge_up_list)

@@ -9,7 +9,7 @@ Some of its distinctive features:
  - Implemented in python
  - Efficient and small
  - Package sources are written in XML and python
- - Uses LZMA for a better compression ratio 
+ - Uses LZMA for a better compression ratio
  - Fast database access implemented with berkeley DB
  - Integrates low-level and high-level package operations (dependency resolution)
  - Framework approach to build applications and tools upon
@@ -20,7 +20,7 @@ Build Dependencies:
 
 * comar
 * plyvel
-* python 2.7
+* python 3.8
 * gettext
 * libunwind-devel
 * intltool
@@ -41,5 +41,5 @@ Runtime Dependencies:
 * urlgrabber
 * python-psutil
 * libunwind
-* python-pyliblzma
+* python-pyliblzma yerine python3 te yer alan lzma modülü kullanıldı
 * mudur 4.4.0

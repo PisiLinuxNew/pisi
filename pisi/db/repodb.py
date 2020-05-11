@@ -12,7 +12,7 @@
 
 import gettext
 __trans = gettext.translation('pisi', fallback=True)
-_ = __trans.ugettext
+_ = __trans.gettext
 
 import os
 
@@ -35,7 +35,7 @@ class Repo:
     def __init__(self, indexuri):
         self.indexuri = indexuri
 
-medias = (cd, usb, remote, local) = range(4)
+medias = (cd, usb, remote, local) = list(range(4))
 
 class RepoOrder:
 
@@ -106,7 +106,7 @@ class RepoOrder:
 
         #FIXME: get media order from pisi.conf
         for m in ["cd", "usb", "remote", "local"]:
-            if self.repos.has_key(m):
+            if m in self.repos:
                 order.extend(self.repos[m])
 
         return order
@@ -170,7 +170,7 @@ class RepoDB(lazydb.LazyDB):
 
         try:
             return piksemel.parse(index_path)
-        except Exception, e:
+        except Exception as e:
             raise RepoError(_("Error parsing repository index information. Index file does not exist or is malformed."))
 
     def get_repo(self, repo):
@@ -208,7 +208,7 @@ class RepoDB(lazydb.LazyDB):
         return repos
 
     def list_repos(self, only_active=True):
-        return filter(lambda x:True if not only_active else self.repo_active(x), self.repoorder.get_order())
+        return [x for x in self.repoorder.get_order() if (True if not only_active else self.repo_active(x))]
 
     def list_repo_urls(self, only_active=True):
         repos = []

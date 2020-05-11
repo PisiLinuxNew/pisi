@@ -15,14 +15,14 @@ import optparse
 
 import gettext
 __trans = gettext.translation('pisi', fallback=True)
-_ = __trans.ugettext
+_ = __trans.gettext
 
 import pisi.cli.command as command
 import pisi.context as ctx
 import pisi.api
 import pisi
 
-class Fetch(command.Command):
+class Fetch(command.Command, metaclass=command.autocommand):
     __doc__ = _("""Fetch a package
 
 Usage: fetch [<package1> <package2> ... <packagen>]
@@ -31,7 +31,6 @@ Usage: fetch [<package1> <package2> ... <packagen>]
 
 Downloads the given pisi packages to working directory
 """)
-    __metaclass__ = command.autocommand
 
     def __init__(self,args):
         super(Fetch, self).__init__(args)

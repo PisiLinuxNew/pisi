@@ -23,15 +23,16 @@ import string
 import struct
 import fnmatch
 import hashlib
-import statvfs
+#import statvfs
 import termios
 import operator
 import subprocess
 import unicodedata
 
 import gettext
+from functools import reduce
 __trans = gettext.translation('pisi', fallback=True)
-_ = __trans.ugettext
+_ = __trans.gettext
 
 class Singleton(type):
     def __init__(cls, name, bases, dict):
@@ -63,7 +64,7 @@ class FilePermissionDeniedError(Error):
 #########################
 
 def any(pred, seq):
-    return reduce(operator.or_, map(pred, seq), False)
+    return reduce(operator.or_, list(map(pred, seq)), False)
 
 def flatten_list(l):
     """Flatten a list of lists."""
@@ -73,7 +74,7 @@ def flatten_list(l):
 
 def strlist(l):
     """Concatenate string reps of l's elements."""
-    return "".join(map(lambda x: str(x) + ' ', l))
+    return "".join([str(x) + ' ' for x in l])
 
 def prefix(a, b):
     """Check if sequence a is a prefix of sequence b."""
@@ -236,7 +237,7 @@ def get_terminal_size():
 
 def xterm_title(message):
     """Set message as console window title."""
-    if os.environ.has_key("TERM") and sys.stderr.isatty():
+    if "TERM" in os.environ and sys.stderr.isatty():
         terminalType = os.environ["TERM"]
         for term in ["xterm", "Eterm", "aterm", "rxvt", "screen", "kterm", "rxvt-unicode"]:
             if terminalType.startswith(term):
@@ -246,7 +247,7 @@ def xterm_title(message):
 
 def xterm_title_reset():
     """Reset console window title."""
-    if os.environ.has_key("TERM"):
+    if "TERM" in os.environ:
         xterm_title("")
 
 #############################
@@ -342,7 +343,7 @@ def dir_size(_dir):
         return os.path.getsize(_dir)
 
     if os.path.islink(_dir):
-        return long(len(read_link(_dir)))
+        return int(len(read_link(_dir)))
 
     def sizes():
         for root, dirs, files in os.walk(_dir):
@@ -417,7 +418,7 @@ def get_file_hashes(top, excludePrefix=None, removePrefix=None):
         if excludePrefix:
             temp = remove_prefix(removePrefix, path)
             while temp != "/":
-                if len(filter(lambda x: fnmatch.fnmatch(temp, x), excludePrefix)) > 0:
+                if len([x for x in excludePrefix if fnmatch.fnmatch(temp, x)]) > 0:
                     return False
                 temp = os.path.dirname(temp)
         return True
@@ -475,7 +476,7 @@ def sha1_file(filename):
             # we wont have two allocated blocks with same size
             del block
         return m.hexdigest()
-    except IOError, e:
+    except IOError as e:
         if e.errno == 13:
             # Permission denied, the file doesn't have read permissions, skip
             raise FilePermissionDeniedError(_("You don't have necessary read permissions"))
@@ -485,7 +486,7 @@ def sha1_file(filename):
 def sha1_data(data):
     """Calculate sha1 hash of given data."""
     m = hashlib.sha1()
-    m.update(data)
+    m.update(data.encode("utf-8"))
     return m.hexdigest()
 
 def uncompress(patchFile, compressType="gz", targetDir=""):
@@ -497,7 +498,7 @@ def uncompress(patchFile, compressType="gz", targetDir=""):
     archive = pisi.archive.Archive(patchFile, compressType)
     try:
         archive.unpack(targetDir)
-    except Exception, msg:
+    except Exception as msg:
         raise Error(_("Error while decompressing %s: %s") % (patchFile, msg))
 
     # FIXME: Get file path from Archive instance
@@ -610,7 +611,7 @@ def strip_file(filepath, fileinfo, outpath):
         if ret:
             ctx.ui.warning(_("objcopy (add-debuglink) command failed for file '%s'!") % f)
 
-    if fileinfo == None:        
+    if fileinfo == None:
         ret, out, err = run_batch("file %s" % filepath, ui_debug=False)
         if ret:
             ctx.ui.warning(_("file command failed with return code %s for file: %s") % (ret, filepath))
@@ -643,7 +644,8 @@ def strip_file(filepath, fileinfo, outpath):
 def partition_freespace(directory):
     """Return free space of given directory's partition."""
     st = os.statvfs(directory)
-    return st[statvfs.F_BSIZE] * st[statvfs.F_BFREE]
+    #return st[statvfs.F_BSIZE] * st[statvfs.F_BFREE]
+    return st.f_bsize * st.f_bfree
 
 ########################################
 # Package/Repository Related Functions #
@@ -824,7 +826,7 @@ def filter_latest_packages(package_paths):
 
         name, version = parse_package_name(os.path.basename(path[:-len(ctx.const.package_suffix)]))
 
-        if latest.has_key(name):
+        if name in latest:
             l_version, l_release, l_build = split_version(latest[name][1])
             r_version, r_release, r_build = split_version(version)
 
@@ -855,11 +857,11 @@ def filter_latest_packages(package_paths):
         if version:
             latest[name] = (path, version)
 
-    return map(lambda x: x[0], latest.values())
+    return [x[0] for x in list(latest.values())]
 
 def colorize(msg, color):
     """Colorize the given message for console output"""
-    if ctx.const.colors.has_key(color) and not ctx.get_option('no_color'):
+    if color in ctx.const.colors and not ctx.get_option('no_color'):
         return ctx.const.colors[color] + msg + ctx.const.colors['default']
     else:
         return msg
@@ -888,8 +890,8 @@ def rmdirs(dirpath):
 def letters():
     start = end = None
     result = []
-    for index in xrange(sys.maxunicode + 1):
-        c = unichr(index)
+    for index in range(sys.maxunicode + 1):
+        c = chr(index)
         if unicodedata.category(c)[0] == 'L':
             if start is None:
                 start = end = c

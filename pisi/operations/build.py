@@ -22,7 +22,7 @@ import fnmatch
 
 import gettext
 __trans = gettext.translation('pisi', fallback=True)
-_ = __trans.ugettext
+_ = __trans.gettext
 
 import pisi
 import pisi.specfile
@@ -129,14 +129,14 @@ def exclude_special_files(filepath, fileinfo, ag):
         # patches, PiSi removes wrong paths...
         if re.match(patterns["libtool"], fileinfo) and \
                 not os.path.islink(filepath):
-            ladata = file(filepath).read()
+            ladata = open(filepath).read()
             new_ladata = re.sub("-L%s/\S*" % ctx.config.tmp_dir(), "", ladata)
             new_ladata = re.sub("%s/\S*/install/" % ctx.config.tmp_dir(), "/",
                                 new_ladata)
             if new_ladata != ladata:
-                file(filepath, "w").write(new_ladata)
+                open(filepath, "w").write(new_ladata)
 
-    for name, pattern in patterns.items():
+    for name, pattern in list(patterns.items()):
         if name in keeplist:
             continue
 
@@ -588,11 +588,11 @@ class Builder:
                 else:
                     abandoned_files.append(root)
 
-            if root in all_paths_in_packages: 
+            if root in all_paths_in_packages:
                 skip_paths.append(root)
                 continue
 
-            skip = False 
+            skip = False
             for skip_path in skip_paths:
                 if root.startswith(skip_path):
                     skip = True
@@ -610,7 +610,7 @@ class Builder:
                     abandoned_files.append(fpath)
 
         len_install_dir = len(install_dir)
-        return map(lambda x: x[len_install_dir:], abandoned_files)
+        return [x[len_install_dir:] for x in abandoned_files]
 
     def copy_additional_source_files(self):
         # store additional files
@@ -629,10 +629,10 @@ class Builder:
         try:
             buf = open(fname).read()
             return compile(buf, fname, "exec")
-        except IOError, e:
+        except IOError as e:
             raise Error(_("Unable to read Actions Script (%s): %s")
                         % (fname, e))
-        except SyntaxError, e:
+        except SyntaxError as e:
             raise Error(_("SyntaxError in Actions Script (%s): %s")
                         % (fname, e))
 
@@ -643,8 +643,8 @@ class Builder:
 
         try:
             localSymbols = globalSymbols = {}
-            exec compiled_script in localSymbols, globalSymbols
-        except Exception, e:
+            exec(compiled_script, localSymbols, globalSymbols)
+        except Exception as e:
             import traceback
             traceback.print_exc(e)
             raise ActionScriptException
@@ -662,10 +662,10 @@ class Builder:
                 try:
                     buf = open(fname).read()
                     compile(buf, "error", "exec")
-                except IOError, e:
+                except IOError as e:
                     raise Error(_("Unable to read COMAR script (%s): %s")
                                 % (fname, e))
-                except SyntaxError, e:
+                except SyntaxError as e:
                     raise Error(_("SyntaxError in COMAR file (%s): %s")
                                 % (fname, e))
 
@@ -733,7 +733,7 @@ class Builder:
                 valid_paths = [self.pkg_dir()]
                 conf_file = ctx.const.sandbox_conf
                 if os.path.exists(conf_file):
-                    for line in file(conf_file):
+                    for line in open(conf_file):
                         line = line.strip()
                         if len(line) > 0 and not line.startswith("#"):
                             if line.startswith("~"):
@@ -745,9 +745,11 @@ class Builder:
                     valid_paths.append(os.environ.get("CCACHE_DIR",
                                                       "/root/.ccache"))
 
+
                 ret = catbox.run(self.actionLocals[func],
                                  valid_paths,
                                  logger=self.log_sandbox_violation)
+
                 # Retcode can be 0 while there is a sanbox violation, so only
                 # look for violations to correctly handle it
                 if ret.violations != []:
@@ -807,7 +809,7 @@ class Builder:
                 build_deps_names = set([x.package for x in build_deps])
                 devel_deps_names = set(self.componentdb.get_component('system.devel').packages)
                 extra_names = devel_deps_names - build_deps_names
-                extra_names = filter(lambda x: not self.installdb.has_package(x), extra_names)
+                extra_names = [x for x in extra_names if not self.installdb.has_package(x)]
                 if extra_names:
                     ctx.ui.warning(_('Safety switch: following extra packages in system.devel will be installed: ') +
                                util.strlist(extra_names))
@@ -889,8 +891,8 @@ class Builder:
         static_package_obj = pisi.specfile.Package()
         static_package_obj.name = self.spec.source.name + ctx.const.static_name_suffix
         # FIXME: find a better way to deal with the summary and description constants.
-        static_package_obj.summary['en'] = u'Ar files for %s' % (self.spec.source.name)
-        static_package_obj.description['en'] = u'Ar files for %s' % (self.spec.source.name)
+        static_package_obj.summary['en'] = 'Ar files for %s' % (self.spec.source.name)
+        static_package_obj.description['en'] = 'Ar files for %s' % (self.spec.source.name)
         static_package_obj.partOf = self.spec.source.partOf
         for f in ar_files:
             static_package_obj.files.append(pisi.specfile.Path(path=f[len(self.pkg_install_dir()):], fileType="library"))
@@ -907,8 +909,8 @@ class Builder:
         debug_package_obj.debug_package = True
         debug_package_obj.name = package.name + ctx.const.debug_name_suffix
         # FIXME: find a better way to deal with the summary and description constants.
-        debug_package_obj.summary['en'] = u'Debug files for %s' % (package.name)
-        debug_package_obj.description['en'] = u'Debug files for %s' % (package.name)
+        debug_package_obj.summary['en'] = 'Debug files for %s' % (package.name)
+        debug_package_obj.description['en'] = 'Debug files for %s' % (package.name)
         debug_package_obj.partOf = package.partOf
 
         dependency = pisi.dependency.Dependency()
@@ -942,7 +944,7 @@ class Builder:
         for fileinfo in self.files.list:
             size += fileinfo.size
 
-        metadata.package.installedSize = long(size)
+        metadata.package.installedSize = int(size)
 
         self.metadata = metadata
 
@@ -979,7 +981,7 @@ class Builder:
                     continue
                 frpath = util.removepathprefix(install_dir, fpath)  # relative path
                 ftype, permanent = get_file_type(frpath, package.files)
-                fsize = long(util.dir_size(fpath))
+                fsize = int(util.dir_size(fpath))
                 if not os.path.islink(fpath):
                     st = os.stat(fpath)
                 else:
@@ -998,7 +1000,7 @@ class Builder:
                 add_path(path)
 
         files = pisi.files.Files()
-        for fileinfo in d.itervalues():
+        for fileinfo in list(d.values()):
             files.append(fileinfo)
 
         files_xml_path = util.join_path(self.pkg_dir(), ctx.const.files_xml)
@@ -1228,7 +1230,7 @@ class Builder:
 
         old_packages = {}
 
-        for old_release, search_paths in self.delta_search_paths.items():
+        for old_release, search_paths in list(self.delta_search_paths.items()):
             if old_release in old_packages:
                 continue
 
@@ -1266,7 +1268,7 @@ class Builder:
             old_packages.update(found_old_packages)
 
         from pisi.operations.delta import create_delta_packages_from_obj
-        return create_delta_packages_from_obj(old_packages.values(),
+        return create_delta_packages_from_obj(list(old_packages.values()),
                                               package,
                                               self.specdir)
 
@@ -1280,7 +1282,7 @@ def build(pspec):
         pb = Builder.from_name(pspec)
     try:
         pb.build()
-    except ActionScriptException, e:
+    except ActionScriptException as e:
         ctx.ui.error(_("Action script error caught."))
         raise e
     finally:
