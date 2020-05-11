@@ -10,16 +10,17 @@
 # Please read the COPYING file.
 #
 
-import os
-import time
-import string
-
 import gettext
-__trans = gettext.translation('pisi', fallback=True)
-_ = __trans.gettext
+import os
+import string
+import time
 
 import pisi
 import pisi.context as ctx
+
+__trans = gettext.translation('pisi', fallback=True)
+_ = __trans.gettext
+
 
 class Error(pisi.Error):
     pass
@@ -33,9 +34,11 @@ try:
 except ImportError:
     raise Error(_("comar-api package is not fully installed"))
 
+
 def is_char_valid(char):
     """Test if char is valid object path character."""
     return char in string.ascii_letters + string.digits + "_"
+
 
 def is_method_missing(exception):
     """Tells if exception is about missing method in COMAR script"""
@@ -43,6 +46,7 @@ def is_method_missing(exception):
                                       "tr.org.pardus.comar.Missing"):
         return True
     return False
+
 
 def safe_script_name(package):
     """Generates DBus-safe object name for package script names."""
@@ -53,6 +57,7 @@ def safe_script_name(package):
     if object[0].isdigit():
         object = '_%s' % object
     return object
+
 
 def get_link():
     """Connect to the COMAR daemon and return the link."""
@@ -193,8 +198,7 @@ def post_remove(package_name, metapath, filepath, provided_scripts=[]):
     link = get_link()
 
     package_name = safe_script_name(package_name)
-    scripts = set([safe_script_name(s.name) for s \
-            in provided_scripts if s.name])
+    scripts = set([safe_script_name(s.name) for s in provided_scripts if s.name])
     scripts.add(package_name)
 
     if package_name in list(link.System.Package):

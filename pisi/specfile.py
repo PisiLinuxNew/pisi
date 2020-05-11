@@ -452,7 +452,6 @@ class SpecFile(xmlfile.XmlFile, metaclass=autoxml.autoxml):
                     break
 
     def __str__(self):
-        print("==================================================================================================0")
         s = _('Name: %s, version: %s, release: %s\n') % (
               self.source.name, self.history[0].version, self.history[0].release)
         s += _('Summary: %s\n') % str(self.source.summary)

@@ -35,11 +35,14 @@ class ConfigureError(pisi.actionsapi.Error):
         self.value = value
         ctx.ui.error(value)
 
+
 # Internal helpers
 
 def __getAllSupportedFlavours():
     if os.path.exists("/etc/kernel"):
         return os.listdir("/etc/kernel")
+    return []
+
 
 #################
 # Other helpers #
@@ -53,6 +56,7 @@ def __getFlavour():
     else:
         return flavour
 
+
 def __getModuleFlavour():
     for fl in [_f for _f in __getAllSupportedFlavours() if "-" in _f]:
         try:
@@ -65,9 +69,11 @@ def __getModuleFlavour():
 
     return "kernel"
 
+
 def __getKernelARCH():
     """i386 is relevant for our i686 architecture."""
     return get.ARCH().replace("i686", "i386")
+
 
 def __getSuffix():
     """Read and return the value read from .suffix file."""
@@ -75,6 +81,7 @@ def __getSuffix():
     if __getFlavour():
         suffix += "-%s" % __getFlavour()
     return suffix
+
 
 def __getExtraVersion():
     extraversion = ""
@@ -92,6 +99,7 @@ def __getExtraVersion():
         extraversion += "-%s" % __getFlavour()
 
     return extraversion
+
 
 #######################
 # Configuration stuff #
@@ -116,6 +124,7 @@ def getKernelVersion(flavour=None):
         # Fail
         raise ConfigureError(_("Can't find kernel version information file %s.") % kverfile)
 
+
 def configure():
     # Copy the relevant configuration file
     shutil.copy("configs/kernel-%s-config" % get.ARCH(), ".config")
@@ -132,6 +141,7 @@ def configure():
         autotools.make("ARCH=%s listnewconfig" % __getKernelARCH())
     except:
         pass
+
 
 ###################################
 # Building and installation stuff #
@@ -187,14 +197,6 @@ def install():
 def installHeaders(extraHeaders=None):
     """ Install the files needed to build out-of-tree kernel modules. """
 
-    extras = ["drivers/media/dvb-core",
-              "drivers/media/dvb-frontends",
-              "drivers/media/tuners",
-              "drivers/media/platform"]
-
-    if extraHeaders:
-        extras.extend(extraHeaders)
-
     pruned = ["include", "scripts", "Documentation"]
     wanted = ["Makefile*", "Kconfig*", "Kbuild*", "*.sh", "*.pl", "*.lds"]
 
@@ -213,10 +215,6 @@ def installHeaders(extraHeaders=None):
                 ) + " | cpio -pVd --preserve-modification-time %s" % destination
 
     shelltools.system(find_cmd)
-
-    # Install additional headers
-    for headers in extras:
-        shelltools.system("cp -a %s/*.h %s/%s" % (headers, destination, headers))
 
     # Install remaining headers
     shelltools.system("cp -a %s %s" % (" ".join(pruned), destination))
@@ -255,18 +253,10 @@ def installLibcHeaders(excludes=None):
     # Create directories
     shelltools.makedirs(headers_tmp)
     shelltools.makedirs(headers_dir)
-    
-    ###################Workaround begins here ...
-    #Workaround information -- http://patches.openembedded.org/patch/33433/
-    cpy_src="%s/linux-*/arch/x86/include/generated" % (get.workDIR())
-    cpy_tgt="%s/arch/x86/include" % (headers_tmp)
-    shelltools.makedirs(cpy_tgt)
-    
-    copy_cmd ="cp -Rv %s %s " % (cpy_src, cpy_tgt)
-    
-    shelltools.system(copy_cmd)
-    #######################Workaround ends here ...
-    
+
+    # Clean up the source directory
+    autotools.make("mrproper")
+
     # make defconfig and install the headers
     autotools.make("%s defconfig" % make_cmd)
     autotools.rawInstall(make_cmd, "headers_install")
