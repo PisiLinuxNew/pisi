@@ -47,7 +47,7 @@ Downloads the given pisi packages to working directory
         group.add_option("-o", "--output-dir", action="store", default=os.path.curdir,
                                help=_("Output directory for the fetched packages"))
         group.add_option("--runtime-deps", action="store_true", default=None,
-                               help=_("Bağımlılıkları ile indirme açıklaması."))
+                                help=_("Also fetch runtime dependencies"))
 
     def run(self):
         packages = pisi.db.packagedb.PackageDB()
